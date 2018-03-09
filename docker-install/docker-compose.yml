@@ -1,0 +1,40 @@
+version: "3"
+
+volumes:
+  static-files:
+    
+
+services:
+  db:
+    image: postgres:9.6
+    env_file:
+      - ./environments/$ENV_NAME
+
+  webserver:
+    build:
+      context: .
+      dockerfile: services/webserver/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webapp
+    volumes:
+      - static-files:/srv/static-files
+    env_file:
+      - ./environments/$ENV_NAME
+
+  webapp:
+    build:
+      context: webapp
+      args:
+        - DJANGO_PROJECT_NAME=$DJANGO_PROJECT_NAME
+    volumes:
+      - ./webapp/djapp:/srv/djapp
+      - static-files:/srv/static-files
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    env_file:
+      - ./environments/$ENV_NAME
